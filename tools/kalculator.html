@@ -176,7 +176,7 @@ input, .unit
 				}
 			);
 
-			document.getElementById('summary').textContent = total + ' kg (' + ((total < want) ? (want - total) + ' kg en -)' : (total - want) + ' kg en +)');
+			document.getElementById('summary').textContent = total + ' kg (' + ((total < want) ? 'manque ' + (want - total) + ' kg)' : (total - want) + ' kg en trop)');
 		}
 	</script>
 </body>
