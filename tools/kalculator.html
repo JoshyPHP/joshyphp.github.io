@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+	<title>Kalculatrice</title>
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+	<link href="https://fonts.googleapis.com/css2?family=Asap:wght@700&display=swap" rel="stylesheet">
+	<style>
+body
+{
+	background-color: #333;
+	color:            #ff8200;
+	padding:          0 1em;
+}
+body, input
+{
+	font-family:      "Asap", sans-serif;
+	font-optical-sizing: auto;
+	font-weight:      700;
+	font-style:       normal;
+	font-variation-settings: "wdth" 100;
+	font-size:        2em;
+	text-align:       center;
+}
+.highlight
+{
+	background-color: #ff8200;
+	color:            #fff;
+}
+.highlight + .unit
+{
+	color: #fff;
+}
+.mute
+{
+	background-color: #aaa;
+}
+.mute, .mute + .unit
+{
+	color:   #888;
+}
+h2
+{
+	margin: 1em 0 .5em;
+}
+input
+{
+	color:         #000;
+	font-size:     4em;
+	margin-bottom: 1em;
+	width:         100%;
+}
+input, .unit
+{
+	transition: background-color .2s, color .2s;
+}
+.unit
+{
+	font-size:  2em;
+	margin:     -3.5em .3em .5em 0;
+	text-align: right;
+}
+	</style>
+</head>
+<body>
+	<div id="root">
+		<h2>Je veux...</h2>
+		<input autofocus id="want" type="number" placeholder="432">
+		<div class="unit">kg</div>
+		<h2 id="have">J'ai... <span id="summary"></span></h2>
+	</div>
+	<script>
+		document.body.addEventListener(
+			'keydown',
+			function (e)
+			{
+				setTimeout(refresh, 0);
+				if (e.keyCode === 13)
+				{
+					if (e.target.id === 'want')
+					{
+						document.querySelector('.have').focus();
+					}
+					else
+					{
+						addInput().focus();
+					}
+				}
+			}
+		);
+
+		function addInput()
+		{
+			const input = document.createElement('input');
+			input.className   = 'have';
+			input.type        = 'number';
+			input.placeholder = '...';
+
+			const unit = document.createElement('div');
+			unit.className   = "unit";
+			unit.textContent = 'kg';
+
+			document.getElementById('have').after(input, unit);
+
+			return input;
+		}
+		addInput();
+
+		let oldScore = Infinity, oldSet = 0;
+		function refresh()
+		{
+			const want = +document.getElementById('want').value;
+
+			let nodes  = document.querySelectorAll('.have'),
+				values = [];
+			for (const node of nodes)
+			{
+				let value = +node.value;
+				values.push(value > 80 ? value : Infinity);
+			}
+
+			let bestScore = Infinity,
+				bestSet   = 0,
+				n         = 2 ** values.length;
+			while (--n > 0)
+			{
+				let bits = n.toString(2).split('').reverse(),
+					total = 0;
+				bits.forEach(
+					function (bitChar, bitNumber)
+					{
+						if (bitChar === '1')
+						{
+							total += values[bitNumber];
+						}
+					}
+				);
+
+				let score = total - want;
+				if (score < 0)
+				{
+					score *= -1.25;
+				}
+				score += bits.filter(bit => (bit === '1')).length;
+
+				if (score < bestScore)
+				{
+					bestScore = score;
+					bestSet   = n;
+				}
+			}
+
+			if (bestScore === oldScore && bestSet === oldSet)
+			{
+				return;
+			}
+
+			let total = 0;
+			oldScore = bestScore;
+			oldSet   = bestSet;
+			nodes.forEach(
+				function (node, bitNumber)
+				{
+					let className = 'have';
+					if (node.value > 9)
+					{
+						className += (bestSet & (2 ** bitNumber)) ? ' highlight' : ' mute';
+					}
+					if (className.includes('highlight'))
+					{
+						total += +node.value;
+					}
+
+					node.className = className;
+				}
+			);
+
+			document.getElementById('summary').textContent = total + ' kg (' + ((total < want) ? (want - total) + ' kg en -)' : (total - want) + ' kg en +)');
+		}
+	</script>
+</body>
+</html>
